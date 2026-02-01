@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "480593223354",
+    "project_id": "disaster-link-ec682",
+    "storage_bucket": "disaster-link-ec682.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:480593223354:android:23d8acc7aa8d9ba4696c83",
+        "android_client_info": {
+          "package_name": "com.example.disaster_link"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCzTScu07MUj9-nFi4-jXMJcJjNomj5-vE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,30 @@
+{
+    "description": "Simple Feed-Forward Neural Network Weights for Disaster Risk Prediction",
+    "layers": [
+        {
+            "type": "dense",
+            "units": 4,
+            "weights": [
+                [0.8, -0.5, 0.2],
+                [0.1, 0.9, -0.4],
+                [0.5, 0.5, 0.5],
+                [-0.2, 0.1, 0.8]
+            ],
+            "biases": [0.1, -0.1, 0.0, 0.2],
+            "activation": "relu"
+        },
+        {
+            "type": "dense",
+            "units": 3,
+            "weights": [
+                [1.2, 0.1, -0.5, 0.0],
+                [-0.5, 1.5, 0.0, -0.2],
+                [0.0, -0.2, 1.8, 0.5]
+            ],
+            "biases": [0.0, 0.0, 0.0],
+            "activation": "softmax"
+        }
+    ],
+    "labels": ["Low Risk", "Moderate Risk", "High Risk"],
+    "thresholds": [0.0, 50.0, 20.0]
+}

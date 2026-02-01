@@ -1,0 +1,13 @@
+const amplifyconfig = '''{
+  "UserAgent": "aws-amplify-cli/2.0",
+  "Version": "1.0",
+  "storage": {
+    "plugins": {
+      "awsS3StoragePlugin": {
+        "bucket": "disasterlink",
+        "region": "us-east-1",
+        "defaultAccessLevel": "guest"
+      }
+    }
+  }
+}''';

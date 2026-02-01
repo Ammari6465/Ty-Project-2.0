@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- google_maps_key is injected at build time via resValue if MAPS_API_KEY is set in local.properties. -->
+    <string name="google_maps_key">AIzaSyAKhl_U_wtWQW7QrPAqHcKJ8aWghIAHKAo</string>
+</resources>
