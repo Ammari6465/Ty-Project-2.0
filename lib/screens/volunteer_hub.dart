@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart'; // For kIsWeb
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
+import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:ui';
 import '../widgets/app_drawer.dart';
 import '../services/firestore_service.dart';
 import '../services/s3_service.dart';
 import '../models/volunteer_model.dart';
 import '../widgets/volunteer_digital_id.dart';
+import '../theme/app_theme.dart';
+import '../widgets/glassmorphic_textfield.dart';
+import '../widgets/animated_background.dart';
+import '../widgets/glass_list_tile.dart';
+import '../widgets/modern_stat_card.dart';
 
 class VolunteerHubScreen extends StatefulWidget {
   const VolunteerHubScreen({super.key});
@@ -26,7 +35,8 @@ class _VolunteerHubScreenState extends State<VolunteerHubScreen> {
     final notesCtrl = TextEditingController(text: existing?.notes ?? '');
     String availability = existing?.availability ?? _availabilityOptions.first;
     bool isSaving = false;
-    Uint8List? photoBytes;
+    XFile? pickedFile;
+    String? photoPath;
     String? photoFileName;
     String? photoUrl = existing?.photoUrl;
 
@@ -41,9 +51,9 @@ class _VolunteerHubScreenState extends State<VolunteerHubScreen> {
         );
         
         if (image != null) {
-          final bytes = await image.readAsBytes();
           setState(() {
-            photoBytes = bytes;
+            pickedFile = image;
+            photoPath = image.path;
             photoFileName = image.name;
           });
         }
@@ -70,98 +80,191 @@ class _VolunteerHubScreenState extends State<VolunteerHubScreen> {
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(existing == null ? 'Add Volunteer' : 'Edit Volunteer'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Photo Upload Section
-                GestureDetector(
-                  onTap: () => pickPhoto(setState),
-                  child: Container(
-                    height: 120,
-                    width: 120,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.blue, width: 2),
-                    ),
-                    child: photoBytes != null
-                        ? ClipOval(child: Image.memory(photoBytes!, fit: BoxFit.cover))
-                        : photoUrl != null && photoUrl.isNotEmpty
-                            ? ClipOval(
-                                child: Image.network(
-                                  photoUrl,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const Icon(Icons.add_a_photo, size: 40, color: Colors.grey),
-                                ),
-                              )
-                            : const Icon(Icons.add_a_photo, size: 40, color: Colors.grey),
+        builder: (context, setState) => ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Dialog(
+              backgroundColor: Colors.transparent,
+              insetPadding: const EdgeInsets.all(16),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.95),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                      color: Colors.white,
+                      width: 1.5,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Tap to ${photoBytes != null || photoUrl != null ? 'change' : 'add'} photo',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: nameCtrl,
-                  decoration: const InputDecoration(labelText: 'Full Name'),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: emailCtrl,
-                  decoration: const InputDecoration(labelText: 'Email'),
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: phoneCtrl,
-                  decoration: const InputDecoration(labelText: 'Phone'),
-                  keyboardType: TextInputType.phone,
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: locationCtrl,
-                  decoration: const InputDecoration(labelText: 'Location'),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: skillsCtrl,
-                  decoration: const InputDecoration(labelText: 'Skills (comma separated)'),
-                ),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<String>(
-                  value: availability,
-                  decoration: const InputDecoration(labelText: 'Availability'),
-                  items: _availabilityOptions
-                      .map((v) => DropdownMenuItem(value: v, child: Text(v)))
-                      .toList(),
-                  onChanged: (v) {
-                    if (v != null) setState(() => availability = v);
-                  },
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: notesCtrl,
-                  decoration: const InputDecoration(labelText: 'Notes'),
-                  maxLines: 2,
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: isSaving ? null : () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: isSaving
-                  ? null
-                  : () async {
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        existing == null ? 'Add Volunteer' : 'Edit Volunteer',
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.textDark,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Photo Upload Section
+                      GestureDetector(
+                        onTap: () => pickPhoto(setState),
+                        child: Container(
+                          height: 120,
+                          width: 120,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppTheme.successGreen.withOpacity(0.1),
+                                AppTheme.primaryBrand.withOpacity(0.1),
+                              ],
+                            ),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppTheme.lightBrand,
+                              width: 2,
+                            ),
+                          ),
+                          child: photoPath != null || photoUrl != null
+                              ? ClipOval(
+                                  // Prefer locally picked photo if available
+                                  child: photoPath != null
+                                      ? (kIsWeb 
+                                          ? Image.network(photoPath!, fit: BoxFit.cover) 
+                                          : Image.file(File(photoPath!), fit: BoxFit.cover))
+                                      : Image.network(photoUrl!, fit: BoxFit.cover),
+                                )
+                              : const Icon(
+                                  Icons.add_a_photo,
+                                  size: 40,
+                                  color: AppTheme.textLight,
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Tap to ${photoPath != null || photoUrl != null ? 'change' : 'add'} photo',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textLight,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      GlassmorphicTextField(
+                        label: 'Full Name',
+                        hint: 'Enter full name',
+                        controller: nameCtrl,
+                        labelColor: AppTheme.textDark,
+                      ),
+                      const SizedBox(height: 12),
+                      GlassmorphicTextField(
+                        label: 'Email',
+                        hint: 'Enter email',
+                        controller: emailCtrl,
+                        keyboardType: TextInputType.emailAddress,
+                        labelColor: AppTheme.textDark,
+                      ),
+                      const SizedBox(height: 12),
+                      GlassmorphicTextField(
+                        label: 'Phone',
+                        hint: 'Enter phone',
+                        controller: phoneCtrl,
+                        keyboardType: TextInputType.phone,
+                        labelColor: AppTheme.textDark,
+                      ),
+                      const SizedBox(height: 12),
+                      GlassmorphicTextField(
+                        label: 'Location',
+                        hint: 'Enter location',
+                        controller: locationCtrl,
+                        labelColor: AppTheme.textDark,
+                      ),
+                      const SizedBox(height: 12),
+                      GlassmorphicTextField(
+                        label: 'Skills',
+                        hint: 'comma separated',
+                        controller: skillsCtrl,
+                        labelColor: AppTheme.textDark,
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppTheme.lightBrand.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppTheme.primaryBrand.withOpacity(0.2),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: DropdownButtonFormField<String>(
+                          value: availability,
+                          decoration: const InputDecoration(
+                            labelText: 'Availability',
+                            border: InputBorder.none,
+                            labelStyle: TextStyle(color: AppTheme.textLight),
+                          ),
+                          items: _availabilityOptions
+                              .map((v) => DropdownMenuItem(
+                                value: v,
+                                child: Text(
+                                  v,
+                                  style: const TextStyle(color: AppTheme.textDark),
+                                ),
+                              ))
+                              .toList(),
+                          onChanged: (v) {
+                            if (v != null) setState(() => availability = v);
+                          },
+                          dropdownColor: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      GlassmorphicTextField(
+                        label: 'Notes',
+                        hint: 'Additional notes',
+                        controller: notesCtrl,
+                        maxLines: 2,
+                        labelColor: AppTheme.textDark,
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey.shade200,
+                              foregroundColor: AppTheme.textDark,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
+                            ),
+                            onPressed: isSaving ? null : () => Navigator.pop(ctx),
+                            child: const Text('Cancel'),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.successGreen,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: isSaving
+                                ? null
+                                : () async {
                       final fullName = nameCtrl.text.trim();
                       final email = emailCtrl.text.trim();
                       final phone = phoneCtrl.text.trim();
@@ -185,14 +288,13 @@ class _VolunteerHubScreenState extends State<VolunteerHubScreen> {
                       setState(() => isSaving = true);
                       try {
                         // Upload photo to AWS S3 if selected
-                        if (photoBytes != null && photoFileName != null) {
-                          final s3Key = await S3Service.instance.uploadVolunteerPhoto(
-                            bytes: photoBytes!,
-                            fileName: photoFileName!,
-                          );
-                          // Get download URL for the uploaded photo
-                          photoUrl = await S3Service.instance.getDownloadUrl(
-                            s3Key.replaceFirst('s3://disasterlink/', ''),
+                        if (photoPath != null) {
+                          final userId = FirebaseAuth.instance.currentUser?.uid ?? 'unknown';
+                          photoUrl = await S3Service.instance.uploadVolunteerPhoto(
+                            filePath: photoPath!,
+                            fileName: photoFileName ?? 'volunteer_photo.jpg',
+                            volunteerId: userId,
+                            imageFile: pickedFile,
                           );
                         }
 
@@ -224,13 +326,19 @@ class _VolunteerHubScreenState extends State<VolunteerHubScreen> {
                         if (context.mounted) {
                           Navigator.pop(ctx);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(existing == null ? 'Volunteer added' : 'Volunteer updated')),
+                            SnackBar(
+                              content: Text(existing == null ? 'Volunteer added' : 'Volunteer updated'),
+                              backgroundColor: AppTheme.successGreen,
+                            ),
                           );
                         }
                       } catch (e) {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Failed to save volunteer: $e'), backgroundColor: Colors.red),
+                            SnackBar(
+                              content: Text('Failed to save: $e'),
+                              backgroundColor: AppTheme.errorRed,
+                            ),
                           );
                         }
                       } finally {
@@ -239,11 +347,25 @@ class _VolunteerHubScreenState extends State<VolunteerHubScreen> {
                         }
                       }
                     },
-              child: isSaving
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Text('Save'),
+                            child: isSaving
+                                ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                )
+                                : const Text('Save'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -252,144 +374,294 @@ class _VolunteerHubScreenState extends State<VolunteerHubScreen> {
   void _confirmDelete(VolunteerModel v) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete Volunteer'),
-        content: Text('Remove ${v.fullName}?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-            onPressed: () async {
-              try {
-                await FirestoreService.instance.deleteVolunteer(v.id);
-                if (context.mounted) {
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Volunteer deleted')),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to delete volunteer: $e'), backgroundColor: Colors.red),
-                  );
-                }
-              }
-            },
-            child: const Text('Delete'),
+      builder: (ctx) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Dialog(
+              backgroundColor: Colors.transparent,
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: AppTheme.brandGradient,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.2),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primaryBrand.withOpacity(0.4),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.warning_rounded,
+                      color: AppTheme.errorRed,
+                      size: 48,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Delete Volunteer',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Remove ${v.fullName}?',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.8),
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white.withOpacity(0.2),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () => Navigator.pop(ctx),
+                          child: const Text('Cancel'),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.errorRed,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () async {
+                            try {
+                              await FirestoreService.instance.deleteVolunteer(v.id);
+                              if (ctx.mounted) {
+                                Navigator.pop(ctx);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Text('Volunteer deleted'),
+                                    backgroundColor: AppTheme.successGreen,
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (ctx.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Failed to delete: $e'),
+                                    backgroundColor: AppTheme.errorRed,
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                          child: const Text('Delete'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Volunteer Coordination Hub')),
-  drawer: const AppDrawer(),
-      body: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          children: [
-            const Text('Active volunteers', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Expanded(
-              child: StreamBuilder<List<VolunteerModel>>(
-                stream: FirestoreService.instance.streamVolunteers(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  }
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+      extendBodyBehindAppBar: true, 
+      appBar: AppBar(
+        title: const Text('Volunteer Coordination Hub', style: TextStyle(color: AppTheme.textDark)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: AppTheme.textDark),
+      ),
+      drawer: const AppDrawer(),
+      body: AnimatedBackground(
+        child: StreamBuilder<List<VolunteerModel>>(
+          stream: FirestoreService.instance.streamVolunteers(),
+          builder: (context, snapshot) {
+            final volunteers = snapshot.data ?? [];
+            final total = volunteers.length;
+            final available = volunteers.where((v) => v.availability == 'Available').length;
 
-                  final volunteers = snapshot.data ?? [];
-                  if (volunteers.isEmpty) {
-                    return const Center(child: Text('No volunteers yet. Add one.'));
-                  }
-
-                  return ListView.builder(
-                    itemCount: volunteers.length,
-                    itemBuilder: (context, index) {
-                      final v = volunteers[index];
-                      final skillsText = v.skills.isEmpty ? 'No skills' : v.skills.join(', ');
-                      return Card(
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundImage: v.photoUrl != null && v.photoUrl!.isNotEmpty
-                                ? NetworkImage(v.photoUrl!)
-                                : null,
-                            child: v.photoUrl == null || v.photoUrl!.isEmpty
-                                ? const Icon(Icons.person)
-                                : null,
-                          ),
-                          title: Text(v.fullName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+            return CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
                             children: [
-                              if (v.digitalIdNumber != null)
-                                Text('ID: ${v.digitalIdNumber}', style: TextStyle(color: Colors.blue[700], fontWeight: FontWeight.w600)),
-                              Text('Availability: ${v.availability}'),
-                              if (v.email.isNotEmpty) Text('Email: ${v.email}'),
-                              if (v.phone.isNotEmpty) Text('Phone: ${v.phone}'),
-                              if (v.location.isNotEmpty) Text('Location: ${v.location}'),
-                              Text('Skills: $skillsText'),
-                              if (v.notes.isNotEmpty) Text('Notes: ${v.notes}'),
+                              Expanded(
+                                child: ModernStatCard(
+                                  label: 'Total Volunteers',
+                                  value: total.toString(),
+                                  icon: Icons.group,
+                                  color: AppTheme.primaryBrand,
+                                  textColor: AppTheme.primaryBrand,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: ModernStatCard(
+                                  label: 'Available Now',
+                                  value: available.toString(),
+                                  icon: Icons.check_circle_outline,
+                                  color: AppTheme.successGreen,
+                                  textColor: AppTheme.successGreen,
+                                ),
+                              ),
                             ],
                           ),
-                          trailing: PopupMenuButton<String>(
-                            onSelected: (value) async {
-                              if (value == 'edit') {
-                                _showVolunteerDialog(existing: v);
-                                return;
-                              }
-                              if (value == 'delete') {
-                                _confirmDelete(v);
-                                return;
-                              }
-                              if (value == 'viewId') {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => VolunteerDigitalIdCard(volunteer: v),
-                                );
-                                return;
-                              }
-                              if (_availabilityOptions.contains(value)) {
-                                await FirestoreService.instance.updateVolunteerAvailability(v.id, value);
-                              }
-                            },
-                            itemBuilder: (_) => [
-                              const PopupMenuItem(value: 'viewId', child: Row(
-                                children: [
-                                  Icon(Icons.badge, size: 18),
-                                  SizedBox(width: 8),
-                                  Text('View Digital ID'),
-                                ],
-                              )),
-                              const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                              const PopupMenuItem(value: 'delete', child: Text('Delete')),
-                              const PopupMenuDivider(),
-                              ..._availabilityOptions
-                                  .map((a) => PopupMenuItem(value: a, child: Text('Set $a')))
-                                  .toList(),
-                            ],
+                          const SizedBox(height: 24),
+                          const Text(
+                            'Active Team',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.textDark,
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            )
-          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                if (snapshot.connectionState == ConnectionState.waiting)
+                  const SliverFillRemaining(
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                else if (volunteers.isEmpty)
+                  const SliverFillRemaining(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.person_off_outlined, size: 60, color: Colors.grey),
+                          SizedBox(height: 16),
+                          Text(
+                            'No volunteers yet',
+                            style: TextStyle(color: Colors.grey, fontSize: 18),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final v = volunteers[index];
+                          final isAvailable = v.availability == 'Available';
+                          return GlassListTile(
+                            leading: Hero(
+                              tag: 'avatar_${v.id}',
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: isAvailable ? AppTheme.successGreen : Colors.grey,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: CircleAvatar(
+                                  radius: 20,
+                                  backgroundImage: v.photoUrl != null && v.photoUrl!.isNotEmpty
+                                      ? NetworkImage(v.photoUrl!)
+                                      : null,
+                                  backgroundColor: Colors.grey.shade200,
+                                  child: v.photoUrl == null || v.photoUrl!.isEmpty
+                                      ? Text(
+                                          v.fullName.isNotEmpty ? v.fullName[0].toUpperCase() : '?',
+                                          style: TextStyle(color: AppTheme.primaryBrand, fontWeight: FontWeight.bold),
+                                        )
+                                      : null,
+                                ),
+                              ),
+                            ),
+                            title: Text(v.fullName),
+                            subtitle: Row(
+                              children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: isAvailable ? AppTheme.successGreen.withOpacity(0.2) : Colors.grey.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      v.availability,
+                                      style: TextStyle(
+                                        fontSize: 10, 
+                                        color: isAvailable ? AppTheme.successGreen : Colors.grey.shade700,
+                                        fontWeight: FontWeight.bold
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(child: Text(v.skills.join(', '), overflow: TextOverflow.ellipsis)),
+                              ],
+                            ),
+                            trailing: PopupMenuButton<String>(
+                              icon: const Icon(Icons.more_vert, color: Colors.black54),
+                              onSelected: (value) {
+                                if (value == 'edit') _showVolunteerDialog(existing: v);
+                                if (value == 'delete') _confirmDelete(v);
+                                if (value == 'id') {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => VolunteerDigitalIdCard(volunteer: v),
+                                    );
+                                }
+                              },
+                              itemBuilder: (context) => [
+                                const PopupMenuItem(value: 'edit', child: Row(children: [Icon(Icons.edit, size: 18), SizedBox(width: 8), Text('Edit')])),
+                                const PopupMenuItem(value: 'id', child: Row(children: [Icon(Icons.badge, size: 18), SizedBox(width: 8), Text('Digital ID')])),
+                                const PopupMenuItem(value: 'delete', child: Row(children: [Icon(Icons.delete, color: Colors.red, size: 18), SizedBox(width: 8), Text('Delete', style: TextStyle(color: Colors.red))])),
+                              ],
+                            ),
+                            onTap: () => _showVolunteerDialog(existing: v),
+                          );
+                        },
+                        childCount: volunteers.length,
+                      ),
+                    ),
+                  ),
+                  const SliverPadding(padding: EdgeInsets.only(bottom: 80)),
+              ],
+            );
+          },
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showVolunteerDialog(),
-        icon: const Icon(Icons.add),
-        label: const Text('Add Volunteer'),
+        backgroundColor: AppTheme.primaryBrand,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text('Add Member', style: TextStyle(color: Colors.white)),
       ),
     );
   }

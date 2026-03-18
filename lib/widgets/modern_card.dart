@@ -16,7 +16,7 @@ class ModernCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.icon,
-    this.iconColor = AppTheme.primaryPurple,
+    this.iconColor = AppTheme.primaryBrand,
     this.onTap,
     this.badge,
     this.badgeColor,
@@ -31,7 +31,7 @@ class ModernCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: AppTheme.lightPurple,
+            color: AppTheme.lightBrand,
             width: 1.5,
           ),
         ),
@@ -86,7 +86,7 @@ class ModernCard extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: badgeColor ?? AppTheme.primaryPurple,
+                        color: badgeColor ?? AppTheme.primaryBrand,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(

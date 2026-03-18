@@ -35,9 +35,10 @@ class NotificationService {
     String? token;
     try {
       if (kIsWeb) {
-        // VAPID key is optional for some setups but recommended. 
-        // Using default getToken() behavior
-        token = await _fcm.getToken(); 
+        // VAPID key from Firebase Console -> Web configuration -> Web Push certificates
+        token = await _fcm.getToken(
+          vapidKey: "BNM392FNoEnuWEJO66IKZaL0EuT-5QJdZxbiKd15uCVjhwoVcgAUUjw857XQnojPj_9l3VLtFma8NSFd5rSBXRY",
+        ); 
       } else {
         token = await _fcm.getToken();
       }
@@ -94,6 +95,10 @@ class NotificationService {
 
   /// Subscribe to specific topics (e.g. 'volunteers', 'donors')
   Future<void> subscribeToTopic(String topic) async {
+    if (kIsWeb) {
+      print('Topic subscription not supported on Web: $topic');
+      return;
+    }
     try {
       await _fcm.subscribeToTopic(topic);
       print('Subscribed to $topic');
@@ -102,8 +107,12 @@ class NotificationService {
     }
   }
 
-  /// Unsubscribe from specific topics
+  /// Unsubscribe from topics
   Future<void> unsubscribeFromTopic(String topic) async {
+    if (kIsWeb) {
+      print('Topic unsubscribe not supported on Web: $topic');
+      return;
+    }
     try {
       await _fcm.unsubscribeFromTopic(topic);
       print('Unsubscribed from $topic');

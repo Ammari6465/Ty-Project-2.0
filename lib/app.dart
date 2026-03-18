@@ -6,6 +6,7 @@ import 'screens/resource_tracker.dart';
 import 'screens/notifications_screen.dart';
 import 'screens/ai_predictor.dart';
 import 'screens/analytics_screen.dart';
+import 'screens/dashboard_map.dart';
 import 'screens/register_screen.dart';
 import 'screens/admin_user_management.dart';
 import 'models/user_role.dart';
@@ -18,6 +19,7 @@ class DisasterLinkApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'DisasterLink',
       theme: AppTheme.lightTheme(),
       initialRoute: '/login',
@@ -29,27 +31,28 @@ class DisasterLinkApp extends StatelessWidget {
               child: ModernDashboard(),
             ),
         '/volunteer': (c) => const RoleGate(
-              allowed: {UserRole.admin, UserRole.volunteer},
+              allowed: {UserRole.admin, UserRole.volunteer, UserRole.ngo, UserRole.guest},
               child: VolunteerHubScreen(),
             ),
         '/resources': (c) => const RoleGate(
-              allowed: {UserRole.admin, UserRole.ngo, UserRole.volunteer},
+              allowed: {UserRole.admin, UserRole.ngo, UserRole.volunteer, UserRole.guest},
               child: ResourceTrackerScreen(),
             ),
         '/notifications': (c) => const RoleGate(
-              allowed: {UserRole.admin, UserRole.ngo, UserRole.volunteer},
+              allowed: {UserRole.admin, UserRole.ngo, UserRole.volunteer, UserRole.guest},
               child: NotificationsScreen(),
             ),
         '/ai': (c) => const RoleGate(
-              allowed: {UserRole.admin},
+              allowed: {UserRole.admin, UserRole.guest},
               child: AIPredictorScreen(),
             ),
         '/analytics': (c) => const RoleGate(
-              allowed: {UserRole.admin, UserRole.ngo},
+              allowed: {UserRole.admin, UserRole.ngo, UserRole.guest},
               child: AnalyticsScreen(),
             ),
-        '/admin/users': (c) => const RoleGate(
-              allowed: {UserRole.admin},
+        '/map': (c) => const DashboardMapScreen(),
+        '/admin': (c) => const RoleGate(
+              allowed: {UserRole.admin, UserRole.guest},
               child: AdminUserManagementScreen(),
             ),
       },

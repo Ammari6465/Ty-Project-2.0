@@ -20,6 +20,21 @@ class FirestoreService {
   CollectionReference<Map<String, dynamic>> get _markers => _db.collection('map_markers');
   CollectionReference<Map<String, dynamic>> get _resources => _db.collection('resources');
   CollectionReference<Map<String, dynamic>> get _volunteers => _db.collection('volunteers');
+  CollectionReference<Map<String, dynamic>> get _alerts => _db.collection('sos_alerts');
+
+  Future<void> sendSOSAlert({
+    required double latitude,
+    required double longitude,
+    String? userId,
+  }) async {
+    await _alerts.add({
+      'userId': userId ?? 'anonymous',
+      'location': GeoPoint(latitude, longitude),
+      'timestamp': FieldValue.serverTimestamp(),
+      'status': 'active',
+      'type': 'SOS',
+    });
+  }
 
   Stream<List<MapMarkerModel>> getMapMarkers() {
     return _markers.snapshots().map((snapshot) {

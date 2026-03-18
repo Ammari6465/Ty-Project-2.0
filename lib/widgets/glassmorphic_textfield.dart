@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import '../theme/app_theme.dart';
 
+// Modern Glassmorphic Text Field
 class GlassmorphicTextField extends StatelessWidget {
   final String label;
   final String hint;
@@ -8,7 +10,9 @@ class GlassmorphicTextField extends StatelessWidget {
   final TextInputType keyboardType;
   final bool obscureText;
   final Widget? suffixIcon;
+  final IconData? prefixIcon;
   final int maxLines;
+  final Color labelColor;
 
   const GlassmorphicTextField({
     super.key,
@@ -18,7 +22,9 @@ class GlassmorphicTextField extends StatelessWidget {
     this.keyboardType = TextInputType.text,
     this.obscureText = false,
     this.suffixIcon,
+    this.prefixIcon,
     this.maxLines = 1,
+    this.labelColor = AppTheme.textDark,
   });
 
   @override
@@ -28,10 +34,10 @@ class GlassmorphicTextField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: AppTheme.textDark,
+            color: labelColor,
           ),
         ),
         const SizedBox(height: 8),
@@ -39,7 +45,7 @@ class GlassmorphicTextField extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: AppTheme.lightPurple,
+              color: AppTheme.lightBrand,
               width: 1.5,
             ),
           ),
@@ -52,6 +58,7 @@ class GlassmorphicTextField extends StatelessWidget {
                 keyboardType: keyboardType,
                 obscureText: obscureText,
                 maxLines: maxLines,
+                style: const TextStyle(color: AppTheme.textDark),
                 decoration: InputDecoration(
                   hintText: hint,
                   hintStyle: const TextStyle(color: AppTheme.textLight),
@@ -60,6 +67,7 @@ class GlassmorphicTextField extends StatelessWidget {
                     horizontal: 16,
                     vertical: 14,
                   ),
+                  prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: AppTheme.primaryBrand) : null,
                   suffixIcon: suffixIcon,
                   filled: true,
                   fillColor: Colors.white.withOpacity(0.85),

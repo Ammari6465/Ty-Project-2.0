@@ -20,15 +20,16 @@ class RoleService {
       case '/dashboard':
         return true;
       case '/volunteer':
-        return role == UserRole.admin || role == UserRole.volunteer;
       case '/resources':
-        return role == UserRole.admin || role == UserRole.volunteer || role == UserRole.ngo;
       case '/notifications':
-        return role == UserRole.admin || role == UserRole.volunteer || role == UserRole.ngo;
-      case '/ai':
-        return role == UserRole.admin;
       case '/analytics':
-        return role == UserRole.admin || role == UserRole.ngo;
+      case '/ai':
+        // For demo purposes, allow Guest to view UI
+        return true; 
+      case '/admin':
+        // For demo/dev purposes, allow access to admin panel
+        return true;
+      //  return role == UserRole.admin || role == UserRole.volunteer;
       default:
         return true;
     }

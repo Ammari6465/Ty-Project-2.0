@@ -3,16 +3,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:amplify_flutter/amplify_flutter.dart';
-import 'package:amplify_storage_s3/amplify_storage_s3.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'app.dart';
-import 'amplifyconfiguration.dart' as amplify_config;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Load environment variables from .env file
+  await dotenv.load();
+  
   String? firebaseError;
-  String? amplifyError;
   
   // Initialize Firebase
   try {
@@ -51,22 +51,8 @@ Future<void> main() async {
     print('   Stack: $st');
   }
   
-  // Initialize Amplify with S3 Storage
-  try {
-    if (!Amplify.isConfigured) {
-      await Amplify.addPlugin(AmplifyStorageS3());
-      await Amplify.configure(amplify_config.amplifyconfig);
-      // ignore: avoid_print
-      print('✅ Amplify configured with S3 storage');
-    }
-  } catch (e) {
-    amplifyError = e.toString();
-    // ignore: avoid_print
-    print('❌ Amplify initialization FAILED: $e');
-  }
-  
   // Show initialization error as a banner if failed
-  if (firebaseError != null || amplifyError != null) {
+  if (firebaseError != null) {
     runApp(MaterialApp(
       home: Scaffold(
         appBar: AppBar(
@@ -81,35 +67,18 @@ Future<void> main() async {
               children: [
                 const Icon(Icons.error, size: 64, color: Colors.red),
                 const SizedBox(height: 16),
-                if (firebaseError != null) ...[
-                  const Text(
-                    'Firebase initialization failed',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(firebaseError),
-                  const SizedBox(height: 16),
-                  const Text('Firebase Steps to fix:', style: TextStyle(fontWeight: FontWeight.bold)),
-                  const Text('1. Verify google-services.json is in android/app/'),
-                  const Text('2. Run: flutter clean && flutter pub get'),
-                  const Text('3. Rebuild the app'),
-                  const SizedBox(height: 24),
-                ],
-                if (amplifyError != null) ...[
-                  const Text(
-                    'Amplify/S3 initialization failed',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(amplifyError),
-                  const SizedBox(height: 16),
-                  const Text('Amplify Steps to fix:', style: TextStyle(fontWeight: FontWeight.bold)),
-                  const Text('1. Ensure AWS credentials are configured'),
-                  const Text('2. Check amplifyconfiguration.dart settings'),
-                  const Text('3. Run: flutter pub get'),
-                ],
+                const Text(
+                  'Firebase initialization failed',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(firebaseError),
+                const SizedBox(height: 16),
+                const Text('Firebase Steps to fix:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text('1. Verify google-services.json is in android/app/'),
+                const Text('2. Run: flutter clean && flutter pub get'),
+                const Text('3. Rebuild the app'),
               ],
             ),
           ),

@@ -34,7 +34,7 @@ class GlassmorphicDropdown<T> extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: AppTheme.lightPurple,
+              color: AppTheme.lightBrand,
               width: 1.5,
             ),
           ),

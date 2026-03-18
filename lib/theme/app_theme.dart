@@ -1,38 +1,45 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Colors
-  static const Color primaryPurple = Color(0xFF6C63FF);
-  static const Color secondaryPurple = Color(0xFF9B8FFF);
-  static const Color accentBlue = Color(0xFF5A4FFF);
-  static const Color lightPurple = Color(0xFFF3F0FF);
-  static const Color darkBg = Color(0xFF0F0F1F);
-  static const Color surfaceLight = Color(0xFFFAF9FF);
-  static const Color textDark = Color(0xFF1A1A2E);
-  static const Color textLight = Color(0xFF65657B);
-  static const Color successGreen = Color(0xFF4ECB71);
-  static const Color warningOrange = Color(0xFFFFB84D);
-  static const Color errorRed = Color(0xFFFF6B6B);
+  // Colors - Sober & Professional Blue Theme
+  static const Color primaryBrand = Color(0xFF1976D2); // Deep Blue
+  static const Color secondaryBrand = Color(0xFF64B5F6); // Lighter Blue
+  static const Color accentBrand = Color(0xFF0288D1); // Ocean Blue
+  static const Color lightBrand = Color(0xFFE3F2FD); // Very Light Blue
+  static const Color darkBg = Color(0xFF0D1117); // Dark Blue-Grey
+  static const Color surfaceLight = Color(0xFFF5F7FA); // Cool White
+  static const Color textDark = Color(0xFF263238); // Blue Grey Dark
+  static const Color textLight = Color(0xFF546E7A); // Blue Grey Light
+  static const Color successGreen = Color(0xFF43A047);
+  static const Color warningOrange = Color(0xFFFB8C00);
+  static const Color errorRed = Color(0xFFE53935);
   
   // Gradients
-  static const LinearGradient purpleGradient = LinearGradient(
+  static const LinearGradient brandGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF7367F0), Color(0xFFA78BFA)],
+    colors: [Color(0xFF1565C0), Color(0xFF42A5F5)],
   );
 
   static const LinearGradient darkGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF1F1A3F), Color(0xFF2D2A4A)],
+    colors: [Color(0xFF0D1117), Color(0xFF161B22)],
   );
 
   static ThemeData lightTheme() {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      primaryColor: primaryPurple,
+      primaryColor: primaryBrand,
       scaffoldBackgroundColor: surfaceLight,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: ZoomPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.windows: ZoomPageTransitionsBuilder(),
+        },
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: surfaceLight,
         foregroundColor: textDark,
@@ -44,22 +51,22 @@ class AppTheme {
         fillColor: Colors.white.withOpacity(0.9),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: lightPurple),
+          borderSide: const BorderSide(color: lightBrand),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: lightPurple, width: 1.5),
+          borderSide: const BorderSide(color: lightBrand, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: primaryPurple, width: 2),
+          borderSide: const BorderSide(color: primaryBrand, width: 2),
         ),
         labelStyle: const TextStyle(color: textLight),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primaryPurple,
+          backgroundColor: primaryBrand,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

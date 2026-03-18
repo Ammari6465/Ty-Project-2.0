@@ -1,0 +1,12 @@
+Reading c:\Users\Ammar\Downloads\1970-2021_DISASTERS.xlsx - emdat data.csv\1970-2021_DISASTERS.xlsx - emdat data.csv...
+Columns found: ['Dis No', 'Year', 'Seq', 'Glide', 'Disaster Group', 'Disaster Subgroup', 'Disaster Type', 'Disaster Subtype', 'Disaster Subsubtype', 'Event Name', 'Country', 'ISO', 'Region', 'Continent', 'Location', 'Origin', 'Associated Dis', 'Associated Dis2', 'OFDA Response', 'Appeal', 'Declaration', 'Aid Contribution', 'Dis Mag Value', 'Dis Mag Scale', 'Latitude', 'Longitude', 'Local Time', 'River Basin', 'Start Year', 'Start Month', 'Start Day', 'End Year', 'End Month', 'End Day', 'Total Deaths', 'No Injured', 'No Affected', 'No Homeless', 'Total Affected', "Reconstruction Costs ('000 US$)", "Insured Damages ('000 US$)", "Total Damages ('000 US$)", 'CPI', 'Adm Level', 'Admin1 Code', 'Admin2 Code', 'Geo Locations']
+Total Storms: 4005
+Storms with 'Kph' Wind Speed: 1096
+
+Sample Valid Data:
+    Disaster Type  Dis Mag Value                         Country  Year
+48          Storm          110.0                          Canada  1971
+154         Storm           20.0                           India  1974
+427         Storm          153.0  United States of America (the)  1972
+522         Storm          150.0                           Japan  1976
+586         Storm          193.0                            Oman  1977
